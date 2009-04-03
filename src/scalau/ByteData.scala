@@ -71,6 +71,7 @@ final class ByteData private(private val buffer: ByteBuffer) extends RandomAcces
 }
 
 object ByteData {
+
 	private[ByteData] val TOSTRING_LIMIT = 40;
 
 	def wrap(buffer: ByteBuffer) = new ByteData(buffer.asReadOnlyBuffer)
@@ -83,6 +84,12 @@ object ByteData {
 		new ByteData(ByteBuffer.wrap(bytes, offset, length).asReadOnlyBuffer)
 
 	def wrap(s: String, charset: Charset): ByteData = wrap(s.getBytes(charset))
+
+	def copy(buffer: ByteBuffer, length: Int) = {
+		val array = new Array[Byte](length)
+		buffer.get(array)
+		wrap(array)
+	}
 
 	def toHex(bytes: ByteBuffer): CharBuffer = {
 		val cb = CharBuffer.allocate(bytes.remaining * 2)
