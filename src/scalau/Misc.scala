@@ -1,5 +1,7 @@
 package scalau
 
+import java.util.Properties
+
 
 object Misc {
 
@@ -22,4 +24,25 @@ object Misc {
 		result
 	}
 
+	def fromNullable[A](nullable: A): Option[A] = if (nullable == null) None else Some(nullable)
+
+	def toNullable[A](option: Option[A]): A = option.getOrElse(null.asInstanceOf[A])
+
+	implicit def mapToProperties(map: Map[String, String]): Properties = {
+		val p = new Properties()
+		for ((k, v) <- map) {
+			p.setProperty(k, v)
+		}
+		p
+	}
+
+//	implicit def richReference[A](ref: A) = new RichReference(ref)
+
 }
+
+//
+//final class RichReference[A] private[scalau] (val ref: A) {
+//
+//	def unary_~ = Misc.fromNullable(ref)
+//
+//}
