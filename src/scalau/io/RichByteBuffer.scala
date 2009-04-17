@@ -1,6 +1,7 @@
 package scalau.io
 
 import java.nio.ByteBuffer
+import java.nio.charset.Charset
 
 
 object RichByteBuffer {
@@ -46,6 +47,15 @@ final class RichByteBuffer private (underlying: ByteBuffer) {
 
 	def getUInt: Int = {
 		underlying.getInt & 0xFFFFFFFF
+	}
+
+	def toString(charset: Charset): String = {
+		val start = underlying.position
+		val bytes = new Array[Byte](underlying.remaining)
+		underlying.get(bytes)
+		assert(!underlying.hasRemaining)
+		underlying.position(start)
+		new String(bytes, charset)
 	}
 
 }
