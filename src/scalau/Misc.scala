@@ -36,7 +36,23 @@ object Misc {
 		p
 	}
 
-//	implicit def richReference[A](ref: A) = new RichReference(ref)
+	def anyToJavaObject(any: Any): Object = any match {
+		case x: Boolean => java.lang.Boolean.valueOf(x)
+		case x: Byte => java.lang.Byte.valueOf(x)
+		case x: Short => java.lang.Short.valueOf(x)
+		case x: Char => java.lang.Character.valueOf(x)
+		case x: Int => java.lang.Integer.valueOf(x)
+		case x: Long => java.lang.Long.valueOf(x)
+		case x: Float => java.lang.Float.valueOf(x)
+		case x: Double => java.lang.Double.valueOf(x)
+		case x: AnyRef => x
+	}
+
+	def anyToJavaObjectArray(any: Any*): Array[Object] = {
+		(for (a <- any) yield anyToJavaObject(a)).toArray
+	}
+
+    //	implicit def richReference[A](ref: A) = new RichReference(ref)
 
 }
 
