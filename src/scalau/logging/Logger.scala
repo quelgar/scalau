@@ -9,7 +9,7 @@ class Logger(val javaLogger: JLogger) {
 
   def isLoggable(level: Level) = javaLogger.isLoggable(level)
 
-  def logRecord(level: Level, msg: => String, recordInit: (LogRecord) => Unit) {
+  def logRecord(level: Level)(msg: => String, recordInit: (LogRecord) => Unit) {
     if (isLoggable(level)) {
       val record = new LogRecord(level, msg)
       recordInit(record)
@@ -17,43 +17,54 @@ class Logger(val javaLogger: JLogger) {
     }
   }
 
-  def log(level: Level, msg: => String, args: AnyRef*) {
+  def log(level: Level)(msg: => String, args: Any*) {
     if (isLoggable(level)) {
       if (args.isEmpty) {
         javaLogger.log(level, msg)
       }
       else {
-        javaLogger.log(level, msg, args)
+        javaLogger.log(level, msg, Misc.anyToJavaObjectArray(args))
       }
     }
   }
 
-  def logThrown(level: Level, msg: => String, thrown: Throwable) {
-    if (isLoggable(level)) {
-      javaLogger.log(level, msg, thrown)
-    }
+  def logThrown(level: Level)(msg: => String, thrown: Throwable, args: Any*) {
+	  if (args.isEmpty && isLoggable(level))
+	    javaLogger.log(level, msg, thrown)
+	  else
+      log(level)(msg, { (rec: LogRecord) =>
+		      rec.setThrown(thrown)
+          rec.setParameters(Misc.anyToJavaObjectArray(args))
+      })
   }
 
-  def logThrown(level: Level, msg: => String, thrown: Throwable, args: AnyRef*) {
-    log(level, msg, { (_: LogRecord).setThrown(thrown) } )
-  }
+  def severe(msg: => String, args: Any*): Unit = log(SEVERE) _
 
-  def severe(msg: => String) {
-    log(SEVERE, msg)
-  }
+  def severe(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(SEVERE) _
 
-  def severe(msg: => String, thrown: Throwable) {
-    log(SEVERE, msg, thrown)
-  }
+  def warning(msg: => String, args: Any*): Unit = log(WARNING) _
 
-  def warning(msg: => String) {
-    log(WARNING, msg)
-  }
+  def warning(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(WARNING) _
 
-  def warning(msg: => String, thrown: Throwable) {
-    log(WARNING, msg)
-  }
+	def info(msg: => String, args: Any*): Unit = log(INFO) _
 
+	def info(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(INFO) _
+
+	def config(msg: => String, args: Any*): Unit = log(CONFIG) _
+
+	def config(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(CONFIG) _
+
+	def fine(msg: => String, args: Any*): Unit = log(FINE) _
+
+	def fine(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(FINE) _
+
+	def finer(msg: => String, args: Any*): Unit = log(FINER) _
+
+	def finer(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(FINER) _
+
+	def finest(msg: => String, args: Any*): Unit = log(FINEST) _
+
+	def finest(msg: => String, thrown: Throwable, args: Any*): Unit = logThrown(FINEST) _
 
   def level = javaLogger.getLevel
 
