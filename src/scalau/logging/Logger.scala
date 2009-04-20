@@ -3,15 +3,29 @@ package scalau.logging
 import java.util.logging.{Logger => JLogger, _}
 import java.util.logging.Level._
 import java.util.ResourceBundle
+import scalau.Misc._
 
 
 class Logger(val javaLogger: JLogger) {
 
 	def isLoggable(level: Level) = javaLogger.isLoggable(level)
 
+	private def sourceInfo = {
+		val stackTrace = Thread.currentThread.getStackTrace()
+		(for (frame <- stackTrace.drop(1).find(classOf[Logger].getName() != _.getClassName())) yield {
+			val lineNum = frame.getLineNumber()
+			val sourceFile = frame.getFileName()
+			(frame.getClassName(), if (lineNum < 0 || sourceFile == null)
+				frame.getMethodName() else "%s(%s:%d)".format(frame.getMethodName(), sourceFile, lineNum))
+		}).getOrElse(("UNKNOWN", "UNKNOWN"))
+	}
+
 	def logRecord(level: Level)(msg: => String, recordInit: (LogRecord) => Unit) {
 		if (isLoggable(level)) {
 			val record = new LogRecord(level, msg)
+			val (sourceClass, sourceMethod) = sourceInfo
+			record.setSourceClassName(sourceClass)
+			record.setSourceMethodName(sourceMethod)
 			recordInit(record)
 			javaLogger.log(record)
 		}
@@ -19,18 +33,21 @@ class Logger(val javaLogger: JLogger) {
 
 	def log(level: Level)(msg: => String, args: Any*) {
 		if (isLoggable(level)) {
+			val (sourceClass, sourceMethod) = sourceInfo
 			if (args.isEmpty) {
-				javaLogger.log(level, msg)
+				javaLogger.logp(level, sourceClass, sourceMethod, msg)
 			}
 			else {
-				javaLogger.log(level, msg, Misc.anyToJavaObjectArray(args: _*))
+				javaLogger.logp(level, sourceClass, sourceMethod, msg, Misc.anyToJavaObjectArray(args: _*))
 			}
 		}
 	}
 
 	def logThrown(level: Level)(thrown: Throwable, msg: => String, args: Any*) {
-		if (args.isEmpty && isLoggable(level))
-			javaLogger.log(level, msg, thrown)
+		if (args.isEmpty && isLoggable(level)) {
+			val (sourceClass, sourceMethod) = sourceInfo
+			javaLogger.logp(level, sourceClass, sourceMethod, msg, thrown)
+		}
 		else
 			logRecord(level)(msg, {
 				(rec: LogRecord) =>
@@ -47,29 +64,33 @@ class Logger(val javaLogger: JLogger) {
 
 	def warning(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(WARNING)(thrown, msg, args: _*)
 
-	def info(msg: => String, args: Any*): Unit = log(INFO)(msg, args)
+	def info(msg: => String, args: Any*): Unit = log(INFO)(msg, args: _*)
 
-	def info(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(INFO)(thrown, msg, args)
+	def info(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(INFO)(thrown, msg, args: _*)
 
-	def config(msg: => String, args: Any*): Unit = log(CONFIG)(msg, args)
+	def config(msg: => String, args: Any*): Unit = log(CONFIG)(msg, args: _*)
 
-	def config(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(CONFIG)(thrown, msg, args)
+	def config(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(CONFIG)(thrown, msg, args: _*)
 
-	def fine(msg: => String, args: Any*): Unit = log(FINE)(msg, args)
+	def fine(msg: => String, args: Any*): Unit = log(FINE)(msg, args: _*)
 
-	def fine(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINE)(thrown, msg, args)
+	def fine(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINE)(thrown, msg, args: _*)
 
-	def finer(msg: => String, args: Any*): Unit = log(FINER)(msg, args)
+	def finer(msg: => String, args: Any*): Unit = log(FINER)(msg, args: _*)
 
-	def finer(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINER)(thrown, msg, args)
+	def finer(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINER)(thrown, msg, args: _*)
 
-	def finest(msg: => String, args: Any*): Unit = log(FINEST)(msg, args)
+	def finest(msg: => String, args: Any*): Unit = log(FINEST)(msg, args: _*)
 
-	def finest(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINEST)(thrown, msg, args)
+	def finest(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINEST)(thrown, msg, args: _*)
 
 	def level = javaLogger.getLevel
 
 	def level_=(level: Level) {javaLogger.setLevel(level)}
+
+	def parent = new Logger(javaLogger.getParent)
+
+	def parent_=(parent: Logger) { javaLogger.setParent(parent.javaLogger) }
 
 }
 

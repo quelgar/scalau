@@ -9,6 +9,8 @@ object TestLogger extends Application {
 	val logger1 = Logger.logger("one")
 	logger1.level = SEVERE
 	logger1.severe(msg("At severe"))
+	logger1.severe("severe with arg {0}", 666)
+	logger1.severe("severe with arg {0}", 668)
 	logger1.warning(msg("At warning"))
 	logger1.warning(msg("with arg {0}"), 666)
 	logger1.logRecord(WARNING)("record warning", recordInit _)
