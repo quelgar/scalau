@@ -7,44 +7,45 @@ import java.util.ResourceBundle
 
 class Logger(val javaLogger: JLogger) {
 
-  def isLoggable(level: Level) = javaLogger.isLoggable(level)
+	def isLoggable(level: Level) = javaLogger.isLoggable(level)
 
-  def logRecord(level: Level)(msg: => String, recordInit: (LogRecord) => Unit) {
-    if (isLoggable(level)) {
-      val record = new LogRecord(level, msg)
-      recordInit(record)
-      javaLogger.log(record)
-    }
-  }
+	def logRecord(level: Level)(msg: => String, recordInit: (LogRecord) => Unit) {
+		if (isLoggable(level)) {
+			val record = new LogRecord(level, msg)
+			recordInit(record)
+			javaLogger.log(record)
+		}
+	}
 
-  def log(level: Level)(msg: => String, args: Any*) {
-    if (isLoggable(level)) {
-      if (args.isEmpty) {
-        javaLogger.log(level, msg)
-      }
-      else {
-        javaLogger.log(level, msg, Misc.anyToJavaObjectArray(args: _*))
-      }
-    }
-  }
+	def log(level: Level)(msg: => String, args: Any*) {
+		if (isLoggable(level)) {
+			if (args.isEmpty) {
+				javaLogger.log(level, msg)
+			}
+			else {
+				javaLogger.log(level, msg, Misc.anyToJavaObjectArray(args: _*))
+			}
+		}
+	}
 
-  def logThrown(level: Level)(thrown: Throwable, msg: => String, args: Any*) {
-	  if (args.isEmpty && isLoggable(level))
-	    javaLogger.log(level, msg, thrown)
-	  else
-      logRecord(level)(msg, { (rec: LogRecord) =>
-		      rec.setThrown(thrown)
-          rec.setParameters(Misc.anyToJavaObjectArray(args: _*))
-      })
-  }
+	def logThrown(level: Level)(thrown: Throwable, msg: => String, args: Any*) {
+		if (args.isEmpty && isLoggable(level))
+			javaLogger.log(level, msg, thrown)
+		else
+			logRecord(level)(msg, {
+				(rec: LogRecord) =>
+						rec.setThrown(thrown)
+						rec.setParameters(Misc.anyToJavaObjectArray(args: _*))
+			})
+	}
 
-  def severe(msg: => String, args: Any*): Unit = log(SEVERE)(msg, args: _*)
+	def severe(msg: => String, args: Any*): Unit = log(SEVERE)(msg, args: _*)
 
-  def severe(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(SEVERE)(thrown, msg, args: _*)
+	def severe(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(SEVERE)(thrown, msg, args: _*)
 
-  def warning(msg: => String, args: Any*): Unit = log(WARNING)(msg, args: _*)
+	def warning(msg: => String, args: Any*): Unit = log(WARNING)(msg, args: _*)
 
-  def warning(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(WARNING)(thrown, msg, args: _*)
+	def warning(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(WARNING)(thrown, msg, args: _*)
 
 	def info(msg: => String, args: Any*): Unit = log(INFO)(msg, args)
 
@@ -66,24 +67,24 @@ class Logger(val javaLogger: JLogger) {
 
 	def finest(thrown: Throwable, msg: => String, args: Any*): Unit = logThrown(FINEST)(thrown, msg, args)
 
-  def level = javaLogger.getLevel
+	def level = javaLogger.getLevel
 
-  def level_=(level: Level) { javaLogger.setLevel(level) }
+	def level_=(level: Level) {javaLogger.setLevel(level)}
 
 }
 
 object Logger {
 
-  def logger(name: String) = new Logger(JLogger.getLogger(name))
+	def logger(name: String) = new Logger(JLogger.getLogger(name))
 
-  def logger(name: Class[_]) = new Logger(JLogger.getLogger(name.getName))
+	def logger(name: Class[_]) = new Logger(JLogger.getLogger(name.getName))
 
-  def logger(name: String, resourceBundleName: String) =
-    new Logger(JLogger.getLogger(name, resourceBundleName))
+	def logger(name: String, resourceBundleName: String) =
+		new Logger(JLogger.getLogger(name, resourceBundleName))
 
-  def logger(name: Class[_], resourceBundleName: String) =
-    new Logger(JLogger.getLogger(name.getName, resourceBundleName))
+	def logger(name: Class[_], resourceBundleName: String) =
+		new Logger(JLogger.getLogger(name.getName, resourceBundleName))
 
-    implicit def logger(javaLogger: JLogger) = new Logger(javaLogger)
+	implicit def logger(javaLogger: JLogger) = new Logger(javaLogger)
 
 }
