@@ -28,6 +28,8 @@ object Misc {
 
 	def toNullable[A](option: Option[A]): A = option.getOrElse(null.asInstanceOf[A])
 
+	def nullable[A](nullable: A, default: => A) = if (nullable == null) default else nullable
+
 	implicit def mapToProperties(map: Map[String, String]): Properties = {
 		val p = new Properties()
 		for ((k, v) <- map) {
