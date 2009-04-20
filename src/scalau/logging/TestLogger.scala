@@ -13,9 +13,10 @@ object TestLogger extends Application {
 	logger1.warning(msg("with arg {0}"), 666)
   logger1.logRecord(WARNING)("record warning", recordInit _)
   logger1.logRecord(SEVERE)("record severe", recordInit _)
-	logger1.warning("test thrown", new NullPointerException)
-	logger1.warning("test thrown, args = {0}, {1}", new NullPointerException, "beast", 666)
-	logger1.logThrown(WARNING)("test thrown, arg = {0}", new NullPointerException, "arg with exception")
+	logger1.level = INFO
+	logger1.warning(new NullPointerException, "test thrown")
+	logger1.warning(new NullPointerException, "test thrown, args = {0}, {1}", "beast", 666)
+	logger1.logThrown(WARNING)(new NullPointerException, "test thrown, arg = {0}", "arg with exception")
 
   private def msg(s: String) = {
     printf("Generating %s%n", s)
@@ -23,6 +24,7 @@ object TestLogger extends Application {
   }
 
   private def recordInit(rec: LogRecord) {
+	  println("record init")
     rec.setSourceClassName("XXX Class Name XXX")
   }
 
