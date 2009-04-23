@@ -49,12 +49,10 @@ final class RichByteBuffer private (underlying: ByteBuffer) {
 		underlying.getInt & 0xFFFFFFFF
 	}
 
-	def toString(charset: Charset): String = {
-		val start = underlying.position
+	def getString(charset: Charset): String = {
 		val bytes = new Array[Byte](underlying.remaining)
 		underlying.get(bytes)
 		assert(!underlying.hasRemaining)
-		underlying.position(start)
 		new String(bytes, charset)
 	}
 
