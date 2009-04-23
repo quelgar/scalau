@@ -88,7 +88,7 @@ class Logger(val javaLogger: JLogger) {
 
 	def level_=(level: Level) {javaLogger.setLevel(level)}
 
-	def parent = new Logger(javaLogger.getParent)
+	def parent = Logger.logger(javaLogger.getParent)
 
 	def parent_=(parent: Logger) { javaLogger.setParent(parent.javaLogger) }
 
