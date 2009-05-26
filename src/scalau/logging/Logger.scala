@@ -92,6 +92,18 @@ class Logger(val javaLogger: JLogger) {
 
 	def parent_=(parent: Logger) { javaLogger.setParent(parent.javaLogger) }
 
+	def addHandler(handler: Handler): this.type = {
+		javaLogger.addHandler(handler)
+		this
+	}
+
+	def removeHandler(handler: Handler): this.type = {
+		javaLogger.removeHandler(handler)
+		this
+	}
+
+	def handlers = javaLogger.getHandlers
+
 }
 
 object Logger {
@@ -107,5 +119,36 @@ object Logger {
 		new Logger(JLogger.getLogger(name.getName, resourceBundleName))
 
 	implicit def logger(javaLogger: JLogger) = new Logger(javaLogger)
+
+}
+
+
+abstract class LoggingConfig {
+
+	final class LoggerConfig(val logger: Logger) {
+
+		def addHandler(handler: Handler) = {
+			logger.addHandler(handler)
+			this
+		}
+
+		def level(level: Level) = {
+			logger.level = level
+			this
+		}
+
+	}
+
+	val FINEST = Level.FINEST
+	val FINER = Level.FINER
+
+
+	config
+
+	def config: Unit
+
+	final def logger(name: String) = new LoggerConfig(Logger.logger(name))
+
+	final def fileHandler(pattern: String) = new FileHandler(pattern)
 
 }

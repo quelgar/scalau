@@ -1,10 +1,23 @@
 package scalau.logging
 
-import java.util.logging.Level._
 import java.util.logging.LogRecord
 
 
+final class TestLoggingConfig extends LoggingConfig {
+
+	def config {
+		val jndiFileHandler = fileHandler("blah")
+
+		logger("jndilogger").addHandler(jndiFileHandler).level(FINEST)
+
+		logger("anotherlogger").level(FINER)
+
+	}
+}
+
 object TestLogger extends Application {
+
+	import java.util.logging.Level._
 
 	val logger1 = Logger.logger("one")
 	logger1.level = SEVERE
