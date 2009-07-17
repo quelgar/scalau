@@ -30,9 +30,9 @@ object Locks {
 		else None
 	}
 
-	def tryLock(lock: Lock)(block: => Unit): Unit = tryLockResult(lock)(block)
+	def tryLock(lock: Lock)(block: => Unit): Boolean = tryLockResult(lock)(block).isDefined
 
-	def tryLock(lock: Lock, time: Long, unit: TimeUnit)(block: => Unit): Unit = tryLockResult(lock, time, unit)(block)
+	def tryLock(lock: Lock, time: Long, unit: TimeUnit)(block: => Unit): Boolean = tryLockResult(lock, time, unit)(block).isDefined
 
 	def lock[A](lock: Lock)(block: => A): A = {
 		lock.lock
