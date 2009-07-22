@@ -56,6 +56,12 @@ object Misc {
 
     //	implicit def richReference[A](ref: A) = new RichReference(ref)
 
+  implicit def javaCharSequence2RandomAccessSeq(charSeq: CharSequence): RandomAccessSeq[Char] = new RandomAccessSeq[Char] {
+    def length = charSeq.length
+
+    def apply(t: Int) = charSeq.charAt(t)
+  }
+
 }
 
 //
