@@ -1,44 +1,32 @@
 package scalau.io
 
-import java.io._
-import java.io.{Writer => JWriter, PrintWriter => JPrintWriter}
+import java.io.{File, FileOutputStream}
+import java.nio.ByteBuffer
 import java.nio.channels.WritableByteChannel
-import java.nio.charset.Charset
-import java.nio.{Buffer, ByteBuffer}
 
 
-object Writer {
-
-}
-
-trait Buffered {
-
-  type BufferType <: Buffer
-
-  protected def buffer: BufferType
-
-  final def bufferSize = buffer.capacity
-
-  def processBuffer(): Unit
+trait BufferedOutput extends Buffered {
 
   def flush() {
     buffer.flip()
-    processBuffer()
+    flushImpl()
   }
+
+  protected def flushImpl(): Unit
 
 }
 
-trait ByteBuffered extends Buffered {
+trait ByteBufferedOutput extends BufferedOutput {
 
   type BufferType = ByteBuffer
 
 }
 
-trait BlockingChannelOutput extends ByteBuffered {
+trait BlockingChannelOutput extends ByteBufferedOutput {
 
   protected val channel: WritableByteChannel
 
-  def processBuffer(): Unit = write(buffer)
+  def flushImpl(): Unit = write(buffer)
 
   def write(data: ByteBuffer): Unit = {
     val sizeToWrite = data.remaining
@@ -54,7 +42,6 @@ trait BlockingChannelOutput extends ByteBuffered {
 
 }
 
-
 trait ByteWriter {
 
   final def writeBytes(b: Byte*): Unit = write(b)
@@ -65,7 +52,7 @@ trait ByteWriter {
 
 trait SynchronousWriter extends ByteWriter {
 
-  this: ByteBuffered =>
+  this: ByteBufferedOutput =>
 
   def write(data: Seq[Byte]) {
     var remainingData = data
@@ -76,8 +63,7 @@ trait SynchronousWriter extends ByteWriter {
         buffer.put(b)
       }
       if (!buffer.hasRemaining) {
-        buffer.flip()
-        processBuffer()
+        flush()
       }
       remainingData = remainingData.drop(sizeWrite)
     }
@@ -85,7 +71,7 @@ trait SynchronousWriter extends ByteWriter {
 
 }
 
-class BufferWriter(initSize: Int) extends SynchronousWriter with ByteBuffered {
+class BufferWriter(initSize: Int) extends SynchronousWriter with ByteBufferedOutput {
 
   protected var currentBuffer = ByteBuffer.allocate(initSize)
 
@@ -99,7 +85,7 @@ class BufferWriter(initSize: Int) extends SynchronousWriter with ByteBuffered {
 
   def currentCapacity: Int = currentBuffer.capacity
 
-  def processBuffer() {
+  def flushImpl() {
     if (currentBuffer.limit == currentBuffer.capacity) {
       val newBuf = ByteBuffer.allocate(currentBuffer.capacity * 2)
       newBuf.put(currentBuffer)
@@ -111,6 +97,8 @@ class BufferWriter(initSize: Int) extends SynchronousWriter with ByteBuffered {
       currentBuffer.limit(currentBuffer.capacity)
     }
   }
+
+  def close = {}
 }
 
 class FileWriter(file: File, append: Boolean) extends SynchronousWriter with BlockingChannelOutput {
@@ -123,32 +111,3 @@ class FileWriter(file: File, append: Boolean) extends SynchronousWriter with Blo
   
 }
 
-
-trait ByteReader {
-
-  def read: Byte
-
-  def read(minToRead: Int): ByteBuffer = {
-    val buf = ByteBuffer.allocate(minToRead)
-    while (buf.hasRemaining) {
-      
-    }
-  }
-
-  def read(dst: Array[Byte], offset: Int, length: Int): Unit
-
-}
-
-object Test {
-
-  def main(args: Array[String]) {
-    val w = new BufferWriter(8)
-    w.writeBytes(1, 2, 3, 4, 5)
-    assert(w.currentCapacity == 8)
-    w.writeBytes(6, 7, 8, 9, 10)
-    val output = w.output
-    assert(output.remaining == 10)
-    assert(output.get(9) == 10)
-    println(w.currentCapacity)
-  }
-}
