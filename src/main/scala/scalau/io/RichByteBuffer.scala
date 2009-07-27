@@ -55,5 +55,9 @@ final class RichByteBuffer private (underlying: ByteBuffer) {
 		assert(!underlying.hasRemaining)
 		new String(bytes, charset)
 	}
+	
+	def limit = underlying.limit
+	
+	def limit_=(limit: Int): Unit = underlying.limit(limit)
 
 }
