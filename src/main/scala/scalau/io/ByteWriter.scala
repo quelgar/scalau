@@ -105,7 +105,7 @@ class FileWriter(file: File, append: Boolean) extends SynchronousWriter with Blo
 
   def this(file: File) = this(file, false)
 
-  protected val buffer = ByteBuffer.allocate(32000)
+  protected val buffer = ByteBuffer.allocate(IO.defaultBufferSize)
 
   protected val channel = new FileOutputStream(file, append).getChannel
   

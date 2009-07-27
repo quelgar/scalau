@@ -1,12 +1,26 @@
 package scalau.io
 
 import collection.mutable
-import java.io.EOFException
-import java.nio.CharBuffer
+import java.io.{ EOFException, File, FileInputStream }
+import java.nio.{ ByteBuffer, CharBuffer }
 import java.nio.charset.{CharsetDecoder, Charset, CoderResult}
 import Misc._
 import runtime.RichString
 
+
+object CharReader {
+  
+  def reader(input: CharBuffer): CharReader = new StandardBufferCharReader(input)
+  
+  def reader(input: CharSequence): CharReader = {
+    val len = input.length
+    val buf = CharBuffer.allocate(len)
+    (0 until len).foreach(i => buf.put(input.charAt(i)))
+    buf.flip()
+    reader(buf)
+  }
+
+}
 
 trait CharReader {
 
@@ -18,6 +32,16 @@ trait CharReader {
    *  end of stream is reached.
    */
   def read(): Int
+  
+  def readOption(): Option[Char] = {
+    val r = read()
+    if (r < 0)
+      None
+    else {
+      assert(r <= Math.MAX_CHAR)
+      Some(r.toChar)
+    }
+  }
 
   /**
    * Reads a number of characters from this reader.
@@ -32,16 +56,17 @@ trait CharReader {
    */
   def read(dst: CharBuffer): Boolean
 
+  def read[A <: Seq[Char]](dst: mutable.Buffer[Char], delimiters: A*): Option[A]
+
   def skip(n: Int): Boolean = {
     var i = 1
     while (i <= n) {
       if (read() < 0)
         return true
+      i += 1
     }
     false
   }
-
-  def read[A <: Seq[Char]](dst: mutable.Buffer[Char], delimiters: A*): Option[A]
 
   def readLine(): String = {
     val line = new StringBuilder(200)
@@ -54,53 +79,110 @@ trait CharReader {
 
 }
 
-class CharReaderFromBytes(initByteInput: ByteBufferedInput, decoder: CharsetDecoder) extends CharReader with BufferedInput {
+trait BufferCharReader extends CharReader {
+  
+  protected val charBuffer: CharBuffer
+  
+  protected def fillCharBuffer(): Boolean = {
+    charBuffer.limit(charBuffer.position)
+    true
+  }
 
-  type BufferType = CharBuffer
+  def read(): Int = {
+    if (!charBuffer.hasRemaining) {
+      charBuffer.clear()
+      fillCharBuffer()
+    }
+    if (!charBuffer.hasRemaining) {
+      -1
+    }
+    else {
+      charBuffer.get()
+    }
+  }
+
+  def read(dst: CharBuffer): Boolean = {
+    var eof = false
+    while (!eof && dst.hasRemaining) {
+      if (!charBuffer.hasRemaining) {
+        charBuffer.clear()
+        fillCharBuffer()
+      }
+      if (!charBuffer.hasRemaining) {
+        eof = true
+      }
+      else {
+        val savedLimit = charBuffer.limit
+        if (dst.remaining < charBuffer.remaining) {
+          charBuffer.limit(charBuffer.limit - (charBuffer.remaining - dst.remaining))
+        }
+        dst.put(charBuffer)
+        charBuffer.limit(savedLimit)
+      }
+    }
+    eof
+  }
+
+  def read[A <: Seq[Char]](dst: mutable.Buffer[Char], delimiters: A*): Option[A] = {
+    while (true) {
+      if (!charBuffer.hasRemaining) {
+        charBuffer.clear()
+        fillCharBuffer()
+      }
+      if (!charBuffer.hasRemaining) {
+        return None
+      }
+      while (charBuffer.hasRemaining) {
+        charBuffer.mark()
+        for (delim <- delimiters) {
+          val found = charBuffer.remaining >= delim.length && delim.forall(c => c == charBuffer.get())
+          charBuffer.reset()
+          if (found) {
+            return Some(delim)
+          }
+        }
+        dst += charBuffer.get()
+      }
+    }
+    error("Unreachable")
+  }
+
+
+}
+
+trait ByteBufferCharDecoder extends BufferCharReader {
+
+  this: ByteBufferedInput =>
+
+  protected val decoder: CharsetDecoder
 
   def charset = decoder.charset
 
-  private val byteInput = new ByteBufferedInput {
-    def fillBuffer(): Boolean = {
-      if (!buffer.hasRemaining) {
-        buffer.clear()
-//        initByteInput.fillBuffer()
-        true  // XXX
-      }
-      else {
-        false
-      }
-    }
-
- //    def buffer = initByteInput.buffer
-    def buffer: java.nio.ByteBuffer = null
-
-
-    def close = initByteInput.close()
-  }
-
-  protected val buffer = CharBuffer.allocate(
-    (decoder.averageCharsPerByte * byteInput.bufferSize).ceil.toInt)
+  protected lazy val charBuffer = CharBuffer.allocate(
+    (decoder.averageCharsPerByte * bufferSize).ceil.toInt)
 
   private var flushOverflow = false
 
-  def this(initByteInput: ByteBufferedInput, charset: Charset) = this(initByteInput, charset.newDecoder())
-
-  protected def fillBuffer(): Boolean = {
+  protected override final def fillCharBuffer(): Boolean = {
     if (flushOverflow) {
-      val flushResult = decoder.flush(buffer)
+      val flushResult = decoder.flush(charBuffer)
       assert(!flushResult.isError)
       return flushResult.isUnderflow
     }
-//    val eofByteBuf = byteInput.fillBuffer()
-    val eofByteBuf = false
-//    val result = decoder.decode(byteInput.buffer, buffer, eof)
-    val result: CoderResult = null
+    val eofByteBuffer = if (!buffer.hasRemaining) {
+      buffer.clear()
+      fillBuffer()
+    }
+    else {
+      false
+    }
+    val result = decoder.decode(buffer, charBuffer, eofByteBuffer)
     if (result.isError) {
       result.throwException()
     }
-    val eof = if (result.isUnderflow && eofByteBuf) {
-      val flushResult = decoder.flush(buffer)
+    val eof = if (result.isUnderflow && eofByteBuffer) {
+      val flushResult = decoder.flush(charBuffer)
+      assert(!flushResult.isError)
       if (flushResult.isOverflow) {
         flushOverflow = true
         false
@@ -115,51 +197,18 @@ class CharReaderFromBytes(initByteInput: ByteBufferedInput, decoder: CharsetDeco
     buffer.flip()
     eof
   }
-
-  def read: Int = {
-    if (!buffer.hasRemaining) {
-      buffer.clear()
-      fillBuffer()
-    }
-    if (!buffer.hasRemaining) {
-      -1
-    }
-    buffer.get()
-  }
-
-
-  def read(dst: CharBuffer): Boolean = true
-
-  def read[A <: Seq[Char]](dst: mutable.Buffer[Char], delimiters: A*): Option[A] = {
-    while (true) {
-      if (!buffer.hasRemaining) {
-        buffer.clear()
-        fillBuffer()
-      }
-      if (!buffer.hasRemaining) {
-        return None
-      }
-      while (buffer.hasRemaining) {
-        buffer.mark()
-        for (delim <- delimiters) {
-          val found = buffer.remaining >= delim.length && delim.forall(c => c == buffer.get())
-          buffer.reset()
-          if (found) {
-            val cp = buffer.asReadOnlyBuffer
-            cp.flip()
-            while (cp.hasRemaining) {
-              dst += cp.get()
-            }
-            return Some(delim)
-          }
-        }
-        dst += buffer.get()
-      }
-    }
-    error("Unreachable")
-  }
-
-  def close {
-    byteInput.close()
-  }
+  
 }
+
+
+class FileCharReader(val file: File, charset: Charset) extends ByteBufferCharDecoder with BlockingChannelInput {
+    
+  protected val buffer = ByteBuffer.allocate(IO.defaultBufferSize)
+  buffer.limit(0)
+    
+  protected val channel = new FileInputStream(file).getChannel
+    
+  protected val decoder = charset.newDecoder()
+}
+
+class StandardBufferCharReader(protected val charBuffer: CharBuffer) extends BufferCharReader

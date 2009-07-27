@@ -46,6 +46,19 @@ trait BlockingChannelInput extends ByteBufferedInput {
 }
 
 
+object ByteReader {
+  
+  def reader(buffer: ByteBuffer): BufferReader = new BufferReader(buffer)
+  
+  def reader(bytes: Byte*): BufferReader = {
+    val buf = ByteBuffer.allocate(bytes.length)
+    bytes.foreach(buf.put(_))
+    buf.flip()
+    reader(buf)
+  }
+
+}
+
 trait ByteReader {
 
   /**
@@ -156,10 +169,8 @@ class FileReader(file: File) extends SynchronousReader with BlockingChannelInput
 
   protected val channel = new FileInputStream(file).getChannel
 
-  protected val buffer = ByteBuffer.allocate(32000)
+  protected val buffer = ByteBuffer.allocate(IO.defaultBufferSize)
 
   buffer.limit(0)
 
 }
-
-
