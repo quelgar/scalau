@@ -26,6 +26,14 @@ object Misc {
 
 	def ?[A](nullable: A): Option[A] = if (nullable == null) None else Some(nullable)
 
+  // XXX - Not sure this is a good idea
+  def ??[A](block: => A): Option[A] = try {
+    ?(block)
+  }
+  catch {
+    case ex: NullPointerException => None
+  }
+
 	def toNullable[A](option: Option[A]): A = option.getOrElse(null.asInstanceOf[A])
 
 	def nullable[A](nullable: A, default: => A) = if (nullable == null) default else nullable
