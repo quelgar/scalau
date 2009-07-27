@@ -24,7 +24,7 @@ object Misc {
 		result
 	}
 
-	def fromNullable[A](nullable: A): Option[A] = if (nullable == null) None else Some(nullable)
+	def ?[A](nullable: A): Option[A] = if (nullable == null) None else Some(nullable)
 
 	def toNullable[A](option: Option[A]): A = option.getOrElse(null.asInstanceOf[A])
 
