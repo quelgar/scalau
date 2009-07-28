@@ -124,12 +124,14 @@ trait CharWriterToBytes extends CharWriter with ByteBufferedOutput {
 }
 
 class FileCharWriter(val file: File, charset: Charset, append: Boolean) extends BlockingChannelOutput with CharWriterToBytes  {
-  
+
   protected val buffer = ByteBuffer.allocate(IO.defaultBufferSize)
   buffer.limit(0)
   
   protected val channel = new FileOutputStream(file, append).getChannel
   
   protected val encoder = charset.newEncoder()
-  
+
+  def this(file: File, charset: Charset) = this(file, charset, false)
+
 }
