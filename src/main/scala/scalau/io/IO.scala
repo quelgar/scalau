@@ -1,8 +1,9 @@
 package scalau.io
 
-import java.io.{Closeable}
+import java.io.{File, Closeable}
 import java.nio.charset.Charset
 import java.nio.{Buffer}
+import scalau.Misc._
 
 
 object IO {
@@ -19,7 +20,14 @@ object IO {
       resource.close()
     }
   }
-  
+
+  def UTF8 = Charset.forName("UTF-8")
+
+  def fsTreeStream(dir: File): Stream[File] = {
+    val children = ?(dir.listFiles()).getOrElse(Nil: Seq[File])
+    Stream.cons(dir,
+      Stream.concat(Stream(children: _*), Stream.concat(children.map(fsTreeStream(_)))))
+  }
 }
 
 
