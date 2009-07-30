@@ -70,6 +70,17 @@ object Misc {
     def apply(t: Int) = charSeq.charAt(t)
   }
 
+  def promoteLeft[L, R](i: Iterable[Either[L, R]]): Either[L, List[R]] =
+    i.foldRight(Right(Nil): Either[L, List[R]]) {
+      (item, either) => item match {
+        case Left(left) => Left(left)
+        case Right(right) => either match {
+          case x@Left(_) => x
+          case Right(xs) => Right(right :: xs)
+        }
+      }
+    }
+
 }
 
 //

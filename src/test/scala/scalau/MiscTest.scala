@@ -43,4 +43,20 @@ final class MiscTest extends Spec with ShouldMatchers {
     }
   }
 
+  describe("Promote left") {
+
+    it("should convert a list of rights to a single right containing a list") {
+      val test = 1 to 5
+      val Right(result) = promoteLeft(test.map(i => Right(i)))
+      result should equal (test.toList)
+    }
+
+    it("should return the first left in a list of eithers") {
+      val s = "left!!"
+      val test = List(Right(1), Left(s), Right(3), Left("other stuff"), Right(5))
+      val Left(result) = promoteLeft(test)
+      result should equal (s)
+    }
+  }
+
 }
