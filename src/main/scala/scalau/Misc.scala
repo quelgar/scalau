@@ -24,10 +24,10 @@ object Misc {
 		result
 	}
 
-	def ?[A](nullable: A): Option[A] = if (nullable == null) None else Some(nullable)
+	def ?[A <: AnyRef](nullable: A): Option[A] = if (nullable eq null) None else Some(nullable)
 
   // XXX - Not sure this is a good idea
-  def ??[A](block: => A): Option[A] = try {
+  def ??[A <: AnyRef](block: => A): Option[A] = try {
     ?(block)
   }
   catch {
@@ -36,7 +36,7 @@ object Misc {
 
 	def toNullable[A](option: Option[A]): A = option.getOrElse(null.asInstanceOf[A])
 
-	def nullable[A](nullable: A, default: => A) = if (nullable == null) default else nullable
+	def ?[A <: AnyRef](nullable: A, default: => A) = if (nullable eq null) default else nullable
 
 	implicit def mapToProperties(map: Map[String, String]): Properties = {
 		val p = new Properties()
