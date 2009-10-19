@@ -1,6 +1,6 @@
 package scalau.io
 
-import java.io.{ File, FileOutputStream }
+import java.io.{Closeable, File, FileOutputStream, Writer => JWriter}
 import java.nio.{ ByteBuffer, CharBuffer }
 import java.nio.charset.{ CharsetEncoder, CoderResult, Charset }
 
@@ -16,6 +16,21 @@ trait CharWriter {
     write(IO.lineSeparator)
   }
 
+  def printf(format: String, args: Any*): Unit = write(format.format(args))
+
+}
+
+object CharWriter {
+
+  implicit def apply(javaWriter: JWriter) = new CharWriter with Closeable {
+
+    def writeChars(chars: Char*) = javaWriter.write(chars.toArray)
+
+    def write(string: CharSequence) = javaWriter.append(string)
+
+    def close() = javaWriter.close()
+
+  }
 }
 
 class BufferCharWriter(initSize: Int) extends CharWriter {
