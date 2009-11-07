@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project relativePaths="false" version="4">
+<project version="4">
   <component name="CharacterBrowser">
     <option name="fontName" value="Consolas" />
   </component>
@@ -27,7 +27,6 @@
   <component name="ProjectDetails">
     <option name="projectName" value="ScalaU" />
   </component>
-  <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectKey">
     <option name="state" value="project:///Users/odela01/work/git/scalau/.idea/misc.xml" />
   </component>
