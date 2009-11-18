@@ -46,7 +46,7 @@ object Misc {
 		p
 	}
 
-	def anyToJavaObject(any: Any): Object = any match {
+	def anyToJavaObject(any: Any): AnyRef = any match {
 		case x: Boolean => java.lang.Boolean.valueOf(x)
 		case x: Byte => java.lang.Byte.valueOf(x)
 		case x: Short => java.lang.Short.valueOf(x)
@@ -57,6 +57,19 @@ object Misc {
 		case x: Double => java.lang.Double.valueOf(x)
 		case x: AnyRef => x
 	}
+
+  def isInstance[A](value: Any)(implicit m: reflect.Manifest[A]): Boolean = value match {
+    case _: Boolean => m.erasure == classOf[Boolean]
+    case _: Byte => m.erasure == classOf[Byte]
+    case _: Short => m.erasure == classOf[Short]
+    case _: Char => m.erasure == classOf[Char]
+    case _: Int => m.erasure == classOf[Int]
+    case _: Long => m.erasure == classOf[Long]
+    case _: Unit => m.erasure == classOf[Unit]
+    case _: Float => m.erasure == classOf[Float]
+    case _: Double => m.erasure == classOf[Double]
+    case v: AnyRef => m.erasure.isInstance(v)
+  }
 
 	def anyToJavaObjectArray(any: Any*): Array[Object] = {
 		(for (a <- any) yield anyToJavaObject(a)).toArray
@@ -69,6 +82,8 @@ object Misc {
 
     def apply(t: Int) = charSeq.charAt(t)
   }
+
+  def undefined: Nothing = throw new AssertionError("Implementation not defined")
 
   def promoteLeft[L, R](i: Iterable[Either[L, R]]): Either[L, List[R]] =
     i.foldRight(Right(Nil): Either[L, List[R]]) {
