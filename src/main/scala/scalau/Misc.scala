@@ -71,6 +71,19 @@ object Misc {
     case v: AnyRef => m.erasure.isInstance(v)
   }
 
+  def getClass(value: Any): Class[_] = value match {
+    case _: Boolean => classOf[Boolean]
+    case _: Byte => classOf[Byte]
+    case _: Short => classOf[Short]
+    case _: Char => classOf[Char]
+    case _: Int => classOf[Int]
+    case _: Long => classOf[Long]
+    case _: Unit => classOf[Unit]
+    case _: Float => classOf[Float]
+    case _: Double => classOf[Double]
+    case v: AnyRef => v.getClass
+  }
+
 	def anyToJavaObjectArray(any: Any*): Array[Object] = {
 		(for (a <- any) yield anyToJavaObject(a)).toArray
 	}
