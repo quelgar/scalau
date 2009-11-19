@@ -78,15 +78,60 @@ trait PropertyBag {
     }
   }
 
+  def child(props: (Symbol, Any)*): PropertyBag
+
+  def set(props: (Symbol, Any)*): PropertyBag
+
+  def delete(keys: Symbol*): PropertyBag
+
+  override def toString = "[Property Bag %s]".format(
+    Stream.fromIterator(properties.elements).take(3).map(p => (p._1, p._2.rawValue)).mkString(", "))
+}
+
+object PropertyBag {
+
+  def makeValues(props: Seq[(Symbol, Any)]): Seq[(Symbol, PropertyValue)] = {
+    props.map(tupled((k, v) => (k, new PropertyValue(v))))
+  }
+
+  def apply(props: (Symbol, Any)*): PropertyBag = {
+    new ListBackedBag {
+      val properties = makeValues(props).toList
+      val prototype = None
+      type Prototype = Nothing
+    }
+  }
+
+  def valueExtract[A] = new ValueExtract { type T = A }
+  
 }
 
 trait ListBackedBag extends PropertyBag {
 
-  val properties: List[(Symbol, PropertyValue)]
+  import PropertyBag.makeValues
 
+  val properties: List[(Symbol, PropertyValue)]
 
   def get(key: Symbol) = properties.find(_._1 == key).map(_._2)
 
+  def delete(keys: Symbol*) = new ListBackedBag {
+    val properties = ListBackedBag.this.properties.remove(p => keys.exists(_ == p._1))
+    val prototype = ListBackedBag.this.prototype
+    type Prototype = ListBackedBag.this.Prototype
+  }
+
+  def set(props: (Symbol, Any)*) = new ListBackedBag {
+    val properties = makeValues(props).toList :::
+        ListBackedBag.this.properties.remove(p => props.exists(_._1 == p._1))
+    val prototype = ListBackedBag.this.prototype
+    type Prototype = ListBackedBag.this.Prototype
+  }
+
+  def child(props: (Symbol, Any)*) = new ListBackedBag {
+    type Prototype = ListBackedBag
+    val properties = makeValues(props).toList
+    val prototype = Some(ListBackedBag.this)
+  }
 }
 
 
@@ -132,25 +177,14 @@ object PropSet {
 
 object Prototype {
 
-  def valueExtract[A] = new ValueExtract { type T = A }
-
-  def bag[A <: PropertyBag](aprototype: Option[A], props: (Symbol, Any)*)
-          : PropertyBag { type Prototype = A } = new ListBackedBag {
-    val properties = props.map(tupled((s, v) => (s, new PropertyValue(v)))).toList
-    val prototype = aprototype
-    type Prototype = A
-  }
-
-  def bag(props: (Symbol, Any)*): PropertyBag = bag(None, props: _*)
-
 }
 
 object Test {
 
   def test {
-    val bag: PropertyBag = Prototype.bag('name -> "fred",
-      'more -> Prototype.bag('val -> 5, 'boolean -> true))
-    val bag2: PropertyBag = Prototype.bag('fred -> 666)
+    val bag: PropertyBag = PropertyBag('name -> "fred",
+      'more -> PropertyBag('val -> 5, 'boolean -> true))
+    val bag2: PropertyBag = PropertyBag('fred -> 666)
 
     (bag('name): @unchecked) match {
       case Some(StringProp(v)) => println(v)
@@ -194,5 +228,10 @@ object Test {
     printf("withProp1 = %d%n", (bag2.using('fred) {(_ : Int) + 2}).get)
     printf("withProp2 = %s%n", bag2.using('unknown) { i: Int => i + 3})
     printf("withProp3 = %s%n", bag2.using('fred) {s: String => "found string: [%s]".format(s)})
+
+    val sub = bag.child('name -> "bill",
+      'another -> 55D)
+    printf("prototype prop = %s%n", sub('more))
+    printf("child name = %s%n", sub('name).get)
   }
 }
