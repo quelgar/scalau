@@ -1,7 +1,5 @@
-/build
 /dist
 /nbproject/private
-/out
 /.idea/workspace.xml
 /target
 /lib_managed
