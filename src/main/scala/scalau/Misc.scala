@@ -26,6 +26,12 @@ object Misc {
 
 	def ?[A <: AnyRef](nullable: A): Option[A] = if (nullable eq null) None else Some(nullable)
 
+  object NotNull {
+
+    def unapply[A <: AnyRef](nullable: A): Option[A] = if (nullable eq null) None else Some(nullable)
+
+  }
+
   // XXX - Not sure this is a good idea
   def ??[A <: AnyRef](block: => A): Option[A] = try {
     ?(block)
