@@ -38,7 +38,7 @@ class Logger(val javaLogger: JLogger) {
 				javaLogger.logp(level, sourceClass, sourceMethod, msg)
 			}
 			else {
-				javaLogger.logp(level, sourceClass, sourceMethod, msg, Misc.anyToJavaObjectArray(args: _*))
+				javaLogger.logp(level, sourceClass, sourceMethod, msg, anyToJavaObjectArray(args: _*))
 			}
 		}
 	}
@@ -52,7 +52,7 @@ class Logger(val javaLogger: JLogger) {
 			logRecord(level)(msg, {
 				(rec: LogRecord) =>
 						rec.setThrown(thrown)
-						rec.setParameters(Misc.anyToJavaObjectArray(args: _*))
+						rec.setParameters(anyToJavaObjectArray(args: _*))
 			})
 	}
 

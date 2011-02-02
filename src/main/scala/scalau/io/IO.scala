@@ -24,9 +24,9 @@ object IO {
   def UTF8 = Charset.forName("UTF-8")
 
   def fsTreeStream(dir: File): Stream[File] = {
-    val children = ?(dir.listFiles()).getOrElse(Nil: Seq[File])
+    val children = ?(dir.listFiles().toSeq).getOrElse(Nil: Seq[File])
     Stream.cons(dir,
-      Stream.concat(Stream(children: _*), Stream.concat(children.map(fsTreeStream(_)))))
+      Stream.concat(Stream(children: _*), children.map(fsTreeStream(_)).flatten))
   }
 }
 

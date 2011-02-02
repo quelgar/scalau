@@ -12,7 +12,7 @@ final class ByteData private(private val buffer: ByteBuffer) {
 
 	def asReadOnlyBuffer() = buffer.asReadOnlyBuffer
 
-	def toArray[B >: Byte]: Array[B] = {
+	def toArray[B >: Byte : Manifest]: Array[B] = {
 		val dst = new Array[B](length)
 		copyToArray(dst, 0)
 		dst
@@ -68,7 +68,7 @@ final class ByteData private(private val buffer: ByteBuffer) {
 		}
 	}
 
-	implicit def toSeq = new RandomAccessSeq[Byte] {
+	implicit def toSeq = new collection.immutable.IndexedSeq[Byte] {
 
 		val length = ByteData.this.length
 

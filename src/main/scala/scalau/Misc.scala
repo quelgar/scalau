@@ -14,7 +14,7 @@ object Misc {
 	}
 
 	// manual currying because of Scala #302
-	def repeatGen[A](generator: => A): (Int) => Array[A] = (count: Int) => {
+	def repeatGen[A : Manifest](generator: => A): (Int) => Array[A] = (count: Int) => {
 		var i = 0
 		val result = new Array[A](count)
 		while (i < count) {
@@ -70,7 +70,7 @@ object Misc {
 
     //	implicit def richReference[A](ref: A) = new RichReference(ref)
 
-  implicit def javaCharSequence2RandomAccessSeq(charSeq: CharSequence): RandomAccessSeq[Char] = new RandomAccessSeq[Char] {
+  implicit def javaCharSequence2RandomAccessSeq(charSeq: CharSequence): collection.immutable.IndexedSeq[Char] = new collection.immutable.IndexedSeq[Char] {
     def length = charSeq.length
 
     def apply(t: Int) = charSeq.charAt(t)

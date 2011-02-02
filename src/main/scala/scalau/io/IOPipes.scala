@@ -2,7 +2,7 @@ package scalau.io
 
 import java.io._
 import java.nio.charset.Charset
-import logging.Logger
+import scalau.logging.Logger
 
 
 trait Pipeable[+O] {

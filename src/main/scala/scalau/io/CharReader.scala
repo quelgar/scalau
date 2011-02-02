@@ -4,8 +4,8 @@ import collection.mutable
 import java.io.{ EOFException, File, FileInputStream }
 import java.nio.{ ByteBuffer, CharBuffer }
 import java.nio.charset.{CharsetDecoder, Charset, CoderResult}
-import Misc._
-import runtime.RichString
+import mutable.StringBuilder
+import scalau.Misc._
 
 
 object CharReader {
@@ -38,7 +38,7 @@ trait CharReader {
     if (r < 0)
       None
     else {
-      assert(r <= Math.MAX_CHAR)
+      assert(r <= Char.MaxValue)
       Some(r.toChar)
     }
   }
@@ -56,7 +56,9 @@ trait CharReader {
    */
   def read(dst: CharBuffer): Boolean
 
-  def read[A <: Seq[Char]](dst: mutable.Buffer[Char], delimiters: A*): Option[A]
+  def read[A <: CharSequence](dst: mutable.Buffer[Char], delimiters: A*): Option[A]
+
+	def read[A <: CharSequence](dst: mutable.StringBuilder, delimiters: A*): Option[A]
 
   def skip(n: Int): Boolean = {
     var i = 1
@@ -69,8 +71,8 @@ trait CharReader {
   }
 
   def readLine(): String = {
-    val line = new StringBuilder(200)
-    val found = read[RichString](line, "\n", "\r\n")
+    val line = new collection.mutable.StringBuilder(200)
+    val found = read(line, "\n", "\r\n")
     if (found.isDefined) {
       skip(found.get.length)
     }
@@ -123,7 +125,7 @@ trait BufferCharReader extends CharReader {
     eof
   }
 
-  def read[A <: Seq[Char]](dst: mutable.Buffer[Char], delimiters: A*): Option[A] = {
+  def read[A <: CharSequence](dst: mutable.Buffer[Char], delimiters: A*): Option[A] = {
     while (true) {
       if (!charBuffer.hasRemaining) {
         charBuffer.clear()
@@ -147,6 +149,29 @@ trait BufferCharReader extends CharReader {
     error("Unreachable")
   }
 
+	def read[A <: CharSequence](dst: StringBuilder, delimiters: A*): Option[A] = {
+		while (true) {
+		  if (!charBuffer.hasRemaining) {
+		    charBuffer.clear()
+		    fillCharBuffer()
+		  }
+		  if (!charBuffer.hasRemaining) {
+		    return None
+		  }
+		  while (charBuffer.hasRemaining) {
+		    charBuffer.mark()
+		    for (delim <- delimiters) {
+		      val found = charBuffer.remaining >= delim.length && delim.forall(c => c == charBuffer.get())
+		      charBuffer.reset()
+		      if (found) {
+		        return Some(delim)
+		      }
+		    }
+		    dst += charBuffer.get()
+		  }
+		}
+		error("Unreachable")
+	}
 
 }
 
