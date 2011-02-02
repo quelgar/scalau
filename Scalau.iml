@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module relativePaths="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
-    <facet type="Scala" name="Scala">
+    <facet type="scala" name="Scala">
       <configuration>
-        <option name="takeFromSettings" value="true" />
-        <option name="myScalaCompilerJarPaths">
-          <array>
-            <option value="$MODULE_DIR$/project/boot/scala-2.7.5/lib/scala-compiler.jar" />
-          </array>
-        </option>
-        <option name="myScalaSdkJarPaths">
-          <array>
-            <option value="$MODULE_DIR$/../../../Library/Application Support/IntelliJIDEA90/Scala/lib/Users/odela01/work/git/scalau/project/boot/scala-2.7.5/lib/scala-library.jar" />
-          </array>
-        </option>
+        <option name="compilerLibraryLevel" value="Global" />
+        <option name="compilerLibraryName" value="Scala Compiler 2.8.1" />
+        <option name="deprecationWarnings" value="true" />
+        <option name="explainTypeErrors" value="true" />
+        <option name="uncheckedWarnings" value="true" />
       </configuration>
     </facet>
   </component>
@@ -37,7 +31,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" exported="" name="Scala 2.7" level="application" />
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
@@ -47,6 +40,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" exported="" name="Scala 2.8.1" level="application" />
   </component>
 </module>
 
