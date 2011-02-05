@@ -1,6 +1,8 @@
 package scalau
 
 import java.util.Properties
+import collection.immutable
+import collection.mutable
 
 
 object Misc {
@@ -14,17 +16,15 @@ object Misc {
 	}
 
 	// manual currying because of Scala #302
-	def repeatGen[A : Manifest](generator: => A): (Int) => Array[A] = (count: Int) => {
+	def repeatGen[A](generator: => A): (Int) => immutable.IndexedSeq[A] = (count: Int) => {
 		var i = 0
-		val result = new Array[A](count)
+		val result = new mutable.ArraySeq[A](count)
 		while (i < count) {
 			result(i) = generator
 			i += 1
 		}
-		result
+		result.toIndexedSeq
 	}
-
-	def ?[A <: AnyRef](nullable: A): Option[A] = if (nullable eq null) None else Some(nullable)
 
   object NotNull {
 
@@ -32,17 +32,7 @@ object Misc {
 
   }
 
-  // XXX - Not sure this is a good idea
-  def ??[A <: AnyRef](block: => A): Option[A] = try {
-    ?(block)
-  }
-  catch {
-    case ex: NullPointerException => None
-  }
-
 	def toNullable[A](option: Option[A]): A = option.getOrElse(null.asInstanceOf[A])
-
-	def ?[A <: AnyRef](nullable: A, default: => A) = if (nullable eq null) default else nullable
 
 	implicit def mapToProperties(map: Map[String, String]): Properties = {
 		val p = new Properties()
