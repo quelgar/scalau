@@ -34,17 +34,9 @@ final class ByteData private(private val buffer: ByteBuffer) {
 
 	def copyToArray(dst: Array[Byte]): Unit = copyToArray(dst, 0)
 
-	def toString(charset: Charset) = {
-		val tmpBuf = buffer.asReadOnlyBuffer
-		if (tmpBuf.hasArray) {
-			new String(tmpBuf.array, charset)
-		}
-		else {
-			val tmpArray = new Array[Byte](tmpBuf.remaining)
-			tmpBuf.get(tmpArray)
-			new String(tmpArray, charset)
-		}
-	}
+	def decode(charset: Charset): CharBuffer = charset.decode(buffer.asReadOnlyBuffer)
+
+	def decodeToString(charset: Charset): String = decode(charset).toString
 
 	override def toString() = {
 		val tmpBuf = buffer.asReadOnlyBuffer

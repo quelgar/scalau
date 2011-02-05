@@ -1,7 +1,7 @@
 package scalau.io
 
-import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import java.nio.{CharBuffer, ByteBuffer}
 
 
 object RichByteBuffer {
@@ -49,13 +49,10 @@ final class RichByteBuffer private (underlying: ByteBuffer) {
 		underlying.getInt & 0xFFFFFFFF
 	}
 
-	def getString(charset: Charset): String = {
-		val bytes = new Array[Byte](underlying.remaining)
-		underlying.get(bytes)
-		assert(!underlying.hasRemaining)
-		new String(bytes, charset)
-	}
-	
+	def decode(charset: Charset): CharBuffer = charset.decode(underlying)
+
+	def decodeToString(charset: Charset): String = decode(charset).toString
+
 	def limit = underlying.limit
 	
 	def limit_=(limit: Int): Unit = underlying.limit(limit)
