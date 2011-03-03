@@ -10,6 +10,8 @@ final class ByteData private(private val buffer: ByteBuffer) {
 
 	def length = buffer.remaining
 
+	def isEmpty = length == 0
+
 	def asReadOnlyBuffer() = buffer.asReadOnlyBuffer
 
 	def toArray[B >: Byte : Manifest]: Array[B] = {
