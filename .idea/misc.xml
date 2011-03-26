@@ -30,7 +30,10 @@
   <component name="ProjectKey">
     <option name="state" value="project:///Users/odela01/work/git/scalau/.idea/misc.xml" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
+  <component name="ProjectResources">
+    <default-html-doctype>http://www.w3.org/1999/xhtml</default-html-doctype>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="Java 1.6" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/target/classes" />
   </component>
   <component name="SvnBranchConfigurationManager">
